@@ -11,7 +11,9 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +21,7 @@ jobs:
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: 'java21'
           distribution: 'microsoft'
 
       - name: Build with Maven
@@ -32,14 +34,13 @@ jobs:
           path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
     permissions:
       id-token: write #This is required for requesting the JWT
-
+      contents: read #This is required for actions/checkout
+  
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -49,9 +50,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.__clientidsecretname__ }}
-          tenant-id: ${{ secrets.__tenantidsecretname__ }}
-          subscription-id: ${{ secrets.__subscriptionidsecretname__ }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CE2D2F870A48482B8039E69A86A7B87B }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_307CCA6D3F92451DA9823C5664B7A17B }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E022DAF94E67477698A8416193C89B64 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -60,4 +61,3 @@ jobs:
           app-name: 'sharemarketagile'
           slot-name: 'Production'
           package: '*.jar'
-          
